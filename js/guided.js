@@ -286,6 +286,11 @@ function renderGuided() {
         <img class="g-gif" src="assets/gifs/${key}.gif" onerror="gifFallback(this,'${nameSlug(meta.name)}')">
         <div class="g-name">${meta.name}</div>
         <div class="g-muscle">${meta.muscle} · Serie ${Math.min(guided.setIndex + 1, totalSets)}/${totalSets}</div>
+        ${sug.last ? `<div class="g-last q-${(sug.last.quality || "none")}">
+          <span class="g-last-lbl">📊 Ultima volta</span>
+          <span class="g-last-val">${sug.lastW != null ? `<b>${sug.lastW}</b> kg · ` : ""}${sug.lastSets}×${sug.lastR}</span>
+          <span class="g-last-day">${sug.day}</span>
+        </div>` : ""}
         ${guided.setIndex === 0 ? `<div class="g-mot">${guidedMotivation(key)}</div>` : `<div class="g-sugg sugg-${sug.color}"><span class="sugg-label">Oggi:</span> ${sug.todayHtml}</div>`}
         ${cuesHTML(key)}
         <div class="g-inputs">

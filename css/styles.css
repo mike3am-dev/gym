@@ -1018,6 +1018,20 @@ img.profile-avatar-lg.av-img { border: 7px solid transparent; background: linear
 .sugg-deload { background: rgba(14,165,233,.16); border: 1px solid rgba(120,200,255,.4); }
 .g-sugg.sugg-deload { color: #BEE3FF; }
 
+/* Guidato: "ultima volta" col colore del semaforo, per adeguarsi consapevolmente */
+.g-last { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; box-sizing: border-box; margin: 8px 0 2px; padding: 9px 12px; border-radius: 13px; font-size: 13px; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-left-width: 4px; text-align: left; }
+.g-last-lbl { font-weight: 800; color: rgba(245,240,255,.7); }
+.g-last-val { font-size: 15px; }
+.g-last-val b { font-size: 17px; }
+.g-last-day { margin-left: auto; font-size: 11px; color: rgba(245,240,255,.5); text-transform: capitalize; }
+.g-last.q-clean { border-left-color: #10B981; }
+.g-last.q-clean .g-last-val { color: #6EE7B7; }
+.g-last.q-hard { border-left-color: #F59E0B; }
+.g-last.q-hard .g-last-val { color: #FCD34D; }
+.g-last.q-fail { border-left-color: #FF4D6D; }
+.g-last.q-fail .g-last-val { color: #FF9DB0; }
+.g-last.q-none { border-left-color: rgba(255,255,255,.3); }
+
 /* ============ WRAPPED ============ */
 .wrapped-overlay { position: fixed; inset: 0; z-index: 500; display: none; }
 .wrapped-overlay.show { display: block; }
