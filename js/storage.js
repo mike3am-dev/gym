@@ -137,6 +137,28 @@ function applyMigrations(s) {
     });
     s.migrations.push("panca-4-serie");
   }
+  // Nuovo esercizio: Affondi statici con manubri in Seduta 1, subito dopo
+  // la Lat Machine. 3x12, peso di partenza 6 kg (preparazione).
+  if (s.migrations.indexOf("add-affondi-statici") < 0) {
+    const AFS = "cx_affondi_statici_manubri";
+    const already = (s.myWorkouts || []).some(w => (w.exercises || []).indexOf(AFS) >= 0);
+    const w = (s.myWorkouts || []).find(x => (x.exercises || []).indexOf("latmachine") >= 0);
+    if (w && !already) {
+      s.customExercises[AFS] = {
+        name: "Affondi statici con manubri",
+        muscle: "Quadricipiti, Glutei",
+        secondary: "Femorali, Core",
+        type: "dumbbell",
+        sets: 3, reps: 12, repsMax: 12, rest: '60"',
+        bodyPart: "legs",
+        tip: "Sul posto, non camminare: scendi dritto finché la coscia è parallela, ginocchio dietro che sfiora il suolo. Busto alto, spingi col tallone davanti."
+      };
+      w.exercises.splice(w.exercises.indexOf("latmachine") + 1, 0, AFS);
+      s.prep = s.prep || {};
+      if (!s.prep[AFS]) s.prep[AFS] = { sets: 3, reps: 12, w: 6 };
+    }
+    s.migrations.push("add-affondi-statici");
+  }
   return s;
 }
 

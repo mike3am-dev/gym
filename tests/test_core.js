@@ -487,13 +487,13 @@ stS.myWorkouts = [
 ];
 stS = api.applyMigrations(stS);
 ok("swap: Seduta 1 ha la panca inclinata nella stessa posizione",
-   JSON.stringify(stS.myWorkouts[0].exercises) === '["legpress","cx_pi","latmachine"]');
+   JSON.stringify(stS.myWorkouts[0].exercises) === '["legpress","cx_pi","latmachine","cx_affondi_statici_manubri"]');
 ok("swap: Seduta 2 ha il chest press nella stessa posizione",
    JSON.stringify(stS.myWorkouts[1].exercises) === '["legext","chestpress","curl"]');
 ok("swap: eseguito una sola volta", stS.migrations.indexOf("swap-chest-panca") >= 0);
 var again = api.applyMigrations(stS);
 ok("swap: idempotente (non torna indietro)",
-   JSON.stringify(again.myWorkouts[0].exercises) === '["legpress","cx_pi","latmachine"]');
+   JSON.stringify(again.myWorkouts[0].exercises) === '["legpress","cx_pi","latmachine","cx_affondi_statici_manubri"]');
 
 /* ---- 16o) AGGIUNTA Affondi laterali con manubri in Seduta 2 ---- */
 var stA = api.defaultState();
@@ -530,6 +530,18 @@ ok("stats: durata stimata plausibile", wsT.minutes >= 10 && wsT.minutes <= 25);
 var wsBig = api.workoutStats({ exercises: ["legpress", "chestpress", "latmachine", "curl", "tricipiti"] });
 ok("stats: scheda più lunga → più minuti", wsBig.minutes > wsT.minutes);
 ok("stats: esercizi inesistenti ignorati", api.workoutStats({ exercises: ["boh", "curl"] }).exercises === 1);
+
+/* ---- 16r) AGGIUNTA Affondi statici con manubri in Seduta 1 (dopo Lat Machine) ---- */
+var stAS = api.defaultState();
+stAS.myWorkouts = [{ id:"s1", name:"Seduta 1", exercises:["legpress","chestpress","latmachine","curl"] }];
+stAS = api.applyMigrations(stAS);
+ok("affondi statici: inseriti subito dopo la lat machine",
+   JSON.stringify(stAS.myWorkouts[0].exercises) === '["legpress","chestpress","latmachine","cx_affondi_statici_manubri","curl"]');
+var afs = stAS.customExercises.cx_affondi_statici_manubri;
+ok("affondi statici: 3x12 con manubri (gambe)", afs && afs.sets === 3 && afs.reps === 12 && afs.type === "dumbbell" && afs.bodyPart === "legs");
+ok("affondi statici: peso di partenza 6 kg", stAS.prep.cx_affondi_statici_manubri.w === 6);
+var stAS2 = api.applyMigrations(stAS);
+ok("affondi statici: non duplicati", stAS2.myWorkouts[0].exercises.filter(function(k){return k==="cx_affondi_statici_manubri";}).length === 1);
 
 /* ---- 17) SMOKE: ogni vista renderizza senza eccezioni (dati demo realistici) ---- */
 function smoke(name, fn) {
