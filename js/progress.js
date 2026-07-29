@@ -238,14 +238,22 @@ const MUSCLE_GROUPS = [
 // % di serie per gruppo muscolare negli ultimi `days` giorni (funzione pura)
 function muscleCoverage(days) {
   const cutoff = localDate(new Date(Date.now() - (days || 30) * 864e5));
+  // Sforzo per gruppo muscolare: ogni serie vale in proporzione alle
+  // ripetizioni fatte rispetto al target dell'esercizio. Così il core
+  // (a corpo libero, senza peso) riflette le ripetizioni reali: se aggiungi
+  // 5 battiti al plank, quel lavoro pesa di più. Cap a 2.5 per non far
+  // esplodere una singola serie a ripetizioni altissime.
   const count = {}; let total = 0;
   state.sessions.filter(x => x.date >= cutoff).forEach(x => {
     Object.keys(x.exercises || {}).forEach(k => {
       const meta = EXERCISES[k];
       if (!meta || !meta.bodyPart) return;
-      const n = (x.exercises[k].sets || []).length || 0;
-      count[meta.bodyPart] = (count[meta.bodyPart] || 0) + n;
-      total += n;
+      const tgt = meta.reps || 10;
+      (x.exercises[k].sets || []).forEach(set => {
+        const eff = meta.time ? 1 : Math.min(2.5, (set.r || tgt) / tgt);
+        count[meta.bodyPart] = (count[meta.bodyPart] || 0) + eff;
+        total += eff;
+      });
     });
   });
   if (!total) return null;
@@ -407,20 +415,24 @@ function renderVolumeChart() {
 
   if (vv) vv.innerHTML = volumeVerdict(weeks.map(wk => Object.values(byWeek[wk]).reduce((a, b) => a + b, 0)));
 
+  // Due tonalità di rosa BEN distinte per scheda (barre + tendenza),
+  // così a colpo d'occhio si capisce quale scheda è quale.
+  const SCHED_COLORS = ["#FF2D95", "#FF86C2", "#C724A8", "#FFB3A1"];   // rosa acceso, rosa chiaro, magenta scuro, rosa salmone
   const datasets = [];
   ALL_WORKOUTS().forEach((w, wi) => {
     const vals = weeks.map(wk => byWeek[wk][w.id] != null ? Math.round(byWeek[wk][w.id]) : null);
     if (!vals.some(v => v != null)) return;
-    const color = w.color || ["#FF2D95", "#5B8DEF", "#F59E0B"][wi % 3];
+    const color = SCHED_COLORS[wi % SCHED_COLORS.length];
     datasets.push({ type: "bar", label: w.name, data: vals,
       backgroundColor: weeks.map((wk, i) => dlWeek[wk] ? "#7DD3FC66" : color + "CC"), borderRadius: 6, order: 2 });
-    // tendenza della scheda sulle SUE settimane — quelle di scarico ESCLUSE
+    // tendenza della scheda sulle SUE settimane — quelle di scarico ESCLUSE.
+    // Tratteggio diverso per scheda: piena la 1ª, tratteggiata la 2ª…
     const idxs = weeks.map((wk, i) => (vals[i] != null && !dlWeek[wk]) ? i : -1).filter(i => i >= 0);
     if (idxs.length >= 2) {
       const tr = linReg(idxs.map(i => vals[i]));
       const line = weeks.map(() => null);
       idxs.forEach((wi2, j) => line[wi2] = tr[j]);
-      datasets.push({ type: "line", label: w.name + " (trend)", data: line, borderColor: color, borderWidth: 2, pointRadius: 0, spanGaps: true, fill: false, tension: 0, order: 1 });
+      datasets.push({ type: "line", label: w.name + " (trend)", data: line, borderColor: color, borderWidth: 2.5, borderDash: wi % 2 ? [6, 4] : [], pointRadius: 0, spanGaps: true, fill: false, tension: 0, order: 1 });
     }
   });
 

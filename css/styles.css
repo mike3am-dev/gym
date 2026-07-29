@@ -1031,6 +1031,7 @@ img.profile-avatar-lg.av-img { border: 7px solid transparent; background: linear
 .g-last.q-fail { border-left-color: #FF4D6D; }
 .g-last.q-fail .g-last-val { color: #FF9DB0; }
 .g-last.q-none { border-left-color: rgba(255,255,255,.3); }
+.g-range { font-weight: 700; color: var(--magenta); font-size: 10.5px; margin-left: 4px; }
 
 /* ============ WRAPPED ============ */
 .wrapped-overlay { position: fixed; inset: 0; z-index: 500; display: none; }

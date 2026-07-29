@@ -159,19 +159,17 @@ function suggestionBase(exKey) {
   if (q === "hard") {
     return { ...base, todayHtml: `Resta su questo peso e ripetizioni finché non diventa pulito`, color: "yellow", targetW: w, targetReps: minR };
   }
-  // 🟢 VERDE — cresci in reps dentro il contenitore, poi sali di peso e ricominci
+  // 🟢 VERDE — regola: +1 ripetizione a ogni sessione fino al MAX di Denis;
+  // raggiunto il max, sali di peso e riparti dal MIN. Sempre, coerente.
   if (nSets < meta.sets) {
     return { ...base, todayHtml: `Aggiungi una serie in più 🎯`, color: "green", targetW: w, targetReps: minR };
   }
   if (minR >= capReps) {
-    const nw = +(w + inc).toFixed(1);   // tetto pieno → sali di peso, svuota il contenitore
-    return { ...base, todayHtml: `Tetto ripetizioni raggiunto: sali di peso e riparti dalle base 🎯`, color: "green", targetW: nw, targetReps: baseReps };
+    const nw = +(w + inc).toFixed(1);   // max raggiunto → +peso, reset alle ripetizioni minime
+    return { ...base, todayHtml: `Max ripetizioni raggiunto: sali di peso e riparti da ${baseReps} 🎯`, color: "green", targetW: nw, targetReps: baseReps };
   }
-  if (minR >= baseReps) {               // dentro il range → +1 ripetizione
-    return { ...base, todayHtml: `Aggiungi una ripetizione per serie 🎯`, color: "green", targetW: w, targetReps: minR + 1 };
-  }
-  // sotto le ripetizioni base ma pulito → completa le base con questo peso
-  return { ...base, todayHtml: `Completa le ripetizioni con questo peso 🎯`, color: "green", targetW: w, targetReps: baseReps };
+  // sotto il max e pulito → una ripetizione in più (indipendentemente dal min)
+  return { ...base, todayHtml: `Aggiungi una ripetizione per serie 🎯`, color: "green", targetW: w, targetReps: minR + 1 };
 }
 
 // Sessione di oggi per la scheda corrente (se esiste)

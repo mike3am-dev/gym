@@ -41,7 +41,7 @@ var api = new Function(
     nightCloseMessage: nightCloseMessage, computeCrewStats: computeCrewStats, icsContent: icsContent,
     manualSave: manualSave, commitSession: commitSession, workoutStats: workoutStats, mergeCustomExercises: mergeCustomExercises,
     EXERCISES_SETS_CHESTPRESS: EXERCISES.chestpress.sets,
-    mealWeekColor: mealWeekColor, restAdvice: restAdvice, photoCheckDue: photoCheckDue, estimate1RM: estimate1RM,
+    mealWeekColor: mealWeekColor, muscleCoverage: muscleCoverage, restAdvice: restAdvice, photoCheckDue: photoCheckDue, estimate1RM: estimate1RM,
     defaultState: defaultState, applyMigrations: applyMigrations,
     fatigueAnalysis: fatigueAnalysis, deloadActive: deloadActive,
     wrappedStats: wrappedStats, wrappedVerdict: wrappedVerdict, volumeComparison: volumeComparison,
@@ -228,9 +228,9 @@ api.set(st);
 ok("radar: senza dati → null", api.muscleCoverage(30) === null);
 var rd = new Date(); rd.setDate(rd.getDate() - 3);
 st.sessions = [{ id: 1, date: api.localDate(rd), workoutId: "fullbody", exercises: {
-  legpress:   { sets: [{w:80,r:12},{w:80,r:12}], quality: "clean" },     // 2 serie gambe
-  chestpress: { sets: [{w:40,r:12},{w:40,r:12}], quality: "clean" },     // 2 serie petto
-  latmachine: { sets: [{w:45,r:12},{w:45,r:12},{w:45,r:12},{w:45,r:12}], quality: "clean" }  // 4 serie schiena
+  legpress:   { sets: [{w:80,r:15},{w:80,r:15}], quality: "clean" },     // 2 serie gambe (a target)
+  chestpress: { sets: [{w:40,r:10},{w:40,r:10}], quality: "clean" },     // 2 serie petto (a target)
+  latmachine: { sets: [{w:45,r:10},{w:45,r:10},{w:45,r:10},{w:45,r:10}], quality: "clean" }  // 4 serie schiena (a target)
 }}];
 var cov = api.muscleCoverage(30);
 ok("radar: percentuali corrette (25/25/50)", cov.pct.legs === 25 && cov.pct.chest === 25 && cov.pct.back === 50);
@@ -542,6 +542,42 @@ ok("affondi statici: 3x12 con manubri (gambe)", afs && afs.sets === 3 && afs.rep
 ok("affondi statici: peso di partenza 6 kg", stAS.prep.cx_affondi_statici_manubri.w === 6);
 var stAS2 = api.applyMigrations(stAS);
 ok("affondi statici: non duplicati", stAS2.myWorkouts[0].exercises.filter(function(k){return k==="cx_affondi_statici_manubri";}).length === 1);
+
+/* ---- 16s) PROGRESSIONE: +1 rep fino al max di Denis, poi peso e reset al min ---- */
+st = api.defaultState();
+api.set(st);
+// alzate laterali: Denis 15 fisso (reps=15, repsMax=15). Fatte 10 pulite → deve dare 11
+st.customExercises = { cx_al: { name:"Alzate laterali manubri", type:"dumbbell", sets:3, reps:15, repsMax:15, rest:'45"', bodyPart:"shoulders" } };
+api.mergeCustomExercises();
+st.sessions = [{ id:1, date:"2026-07-01", workoutId:"x", exercises:{
+  cx_al:{ sets:[{w:4,r:10},{w:4,r:10},{w:4,r:10}], quality:"clean" } } }];
+var sgAL = api.suggestion("cx_al");
+ok("alzate 10 pulite → propone 11 (non 15)", sgAL.targetReps === 11 && sgAL.targetW === 4);
+// range 10-12: a 12 pulite → +peso, reset a 10
+st.sessions = [{ id:2, date:"2026-07-01", workoutId:"fullbody", exercises:{
+  chestpress:{ sets:[{w:30,r:12},{w:30,r:12},{w:30,r:12}], quality:"clean" } } }];
+var sgCP = api.suggestion("chestpress");
+ok("chest press 12 (max) pulite → +2.5 kg e reset a 10", sgCP.targetW === 32.5 && sgCP.targetReps === 10);
+// range 12-15: a 13 pulite → 14
+st.sessions[0].exercises.chestpress = null;
+st.customExercises.cx_pcc = { name:"Pulldown cavi corda", type:"cable", sets:3, reps:12, repsMax:15, rest:'60"', bodyPart:"back" };
+api.mergeCustomExercises();
+st.sessions = [{ id:3, date:"2026-07-01", workoutId:"x", exercises:{
+  cx_pcc:{ sets:[{w:20,r:13},{w:20,r:13},{w:20,r:13}], quality:"clean" } } }];
+ok("pulldown 13/15 pulite → 14", api.suggestion("cx_pcc").targetReps === 14);
+
+/* ---- 16t) RADAR effort-aware sul core (ripetizioni) ---- */
+st = api.defaultState();
+st.customExercises = { cx_pb: { name:"Plank battito spalle", type:"body", sets:3, reps:7, repsMax:7, bodyPart:"core" } };
+var day = api.localDate(new Date());
+// 3 serie di chest press (petto, target 10) vs 3 serie di plank battito con reps doppie (12 vs target 7)
+st.sessions = [{ id:1, date:day, workoutId:"x", exercises:{
+  chestpress:{ sets:[{w:30,r:10},{w:30,r:10},{w:30,r:10}], quality:"clean" },
+  cx_pb:{ sets:[{w:0,r:12},{w:0,r:12},{w:0,r:12}], quality:"clean" } } }];
+api.set(st);
+api.mergeCustomExercises();
+var cov = api.muscleCoverage(30);
+ok("radar: il core con ripetizioni sopra target pesa più del petto a target", cov.pct.core > cov.pct.chest);
 
 /* ---- 17) SMOKE: ogni vista renderizza senza eccezioni (dati demo realistici) ---- */
 function smoke(name, fn) {

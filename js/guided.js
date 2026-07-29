@@ -298,7 +298,7 @@ function renderGuided() {
             <div class="g-step"><button class="g-pm" onclick="gStep('g-w',-2.5)">−</button><input id="g-w" type="number" inputmode="decimal" value="${prevW}" min="0" max="500" step="2.5"><button class="g-pm" onclick="gStep('g-w',2.5)">＋</button></div>
           </div>
           <div class="g-ix">×</div>`}
-          <div class="g-ig"><div class="g-ilbl">Ripetizioni</div>
+          <div class="g-ig"><div class="g-ilbl">Ripetizioni <span class="g-range">${meta.repsMax && meta.repsMax > meta.reps ? `obiettivo ${meta.reps}–${meta.repsMax}` : `obiettivo ${meta.reps}`}</span></div>
             <div class="g-step"><button class="g-pm" onclick="gStep('g-r',-1)">−</button><input id="g-r" type="number" inputmode="numeric" value="${prevR}" min="0" max="50"><button class="g-pm" onclick="gStep('g-r',1)">＋</button></div>
           </div>
         </div>
