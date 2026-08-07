@@ -1127,32 +1127,24 @@ img.profile-avatar-lg.av-img { border: 7px solid transparent; background: linear
 .acct-forgot { display: block; margin: 10px auto 0; background: transparent; border: none; color: var(--muted); font-size: 12.5px; font-weight: 700; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; font-family: inherit; }
 
 /* ============ MOBILITÀ & POSTURA ============ */
-/* Card compatta in cima ad Allena: il blocco che tocca adesso, un solo check */
-.post-hint { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, rgba(124,58,237,.20), rgba(168,85,247,.10)); border: 1px solid rgba(168,85,247,.34); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
-.post-hint.done { background: rgba(43,213,118,.10); border-color: rgba(43,213,118,.32); }
-.post-hint-txt { flex: 1; min-width: 0; cursor: pointer; }
-.post-hint-lbl { font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); }
-.post-hint-title { font-size: 16px; font-weight: 800; margin-top: 2px; }
-.post-hint-sub { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-.post-check { flex-shrink: 0; min-width: 62px; background: rgba(255,255,255,.07); border: 1.5px solid rgba(168,85,247,.5); color: #fff; border-radius: 999px; padding: 9px 14px; font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer; transition: all .18s; }
-.post-check.on { background: rgba(43,213,118,.22); border-color: rgba(43,213,118,.6); color: #BFFFDC; }
+/* Intestazioni contraibili: stesso trattamento per Esercizi e Mobilità */
+.sec-toggle { cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.sec-arrow { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.07); border: 1px solid var(--border); color: rgba(245,240,255,.72); font-size: 13px; line-height: 1; transition: transform .2s; }
+.sec-toggle.closed .sec-arrow { transform: rotate(-90deg); }
 
-/* Blocco in fondo ad Allena: fisarmonica, esercizi solo al tocco */
+/* Blocchi della routine: chiusi di default, gli esercizi compaiono al tocco */
 .post-row { border: 1px solid var(--border); background: var(--card); border-radius: 18px; margin-bottom: 10px; overflow: hidden; }
 .post-row.open { border-color: rgba(168,85,247,.42); }
-.post-row.done .post-row-ico { opacity: .55; }
-.post-row-head { display: flex; align-items: center; gap: 11px; padding: 13px 14px; cursor: pointer; }
-.post-row-ico { font-size: 19px; line-height: 1; flex-shrink: 0; }
+.post-row-head { display: flex; align-items: center; gap: 11px; padding: 14px; cursor: pointer; }
+.post-row-ico { font-size: 20px; line-height: 1; flex-shrink: 0; }
 .post-row-txt { flex: 1; min-width: 0; }
-.post-row-title { font-size: 15px; font-weight: 800; }
+.post-row-title { font-size: 15.5px; font-weight: 800; }
 .post-row-sub { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-.post-streak { font-size: 11px; font-weight: 800; color: var(--pink); }
 .post-row-body { display: none; padding: 0 12px 12px; }
 .post-row.open .post-row-body { display: block; }
-.post-row.open .post-row-head .ex-chevron { transform: rotate(180deg); }
+.post-row.open .sec-arrow { transform: rotate(180deg); }
 .post-row-denis { border-style: dashed; border-color: rgba(255,138,91,.42); }
 .post-row-denis .post-row-title { color: var(--orange); }
-.post-row-rem { border-style: dashed; }
 .post-card { background: rgba(255,255,255,.035); border: 1px solid var(--border); }
 .post-card .ex-num { font-size: 14px; }
 .post-opt { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: rgba(255,255,255,.07); border-radius: 8px; padding: 2px 6px; vertical-align: middle; }
@@ -1164,15 +1156,3 @@ img.profile-avatar-lg.av-img { border: 7px solid transparent; background: linear
 .post-why-i { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; background: rgba(168,85,247,.24); color: #E9D5FF; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
 .post-timer { width: 100%; margin-top: 12px; background: rgba(124,58,237,.18); border: 1.5px solid rgba(168,85,247,.45); color: #fff; border-radius: 14px; padding: 11px; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; }
 .post-timer.on { background: rgba(255,45,149,.22); border-color: var(--magenta); }
-
-/* Sezione Esercizi contraibile */
-.sec-toggle { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.sec-toggle .ex-chevron { transition: transform .2s; font-size: 12px; }
-.sec-toggle.closed .ex-chevron { transform: rotate(-90deg); }
-
-/* Promemoria giornalieri: post-it compatti, informativi (niente check) */
-.post-it-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.post-it { background: linear-gradient(160deg, rgba(255,196,84,.16), rgba(255,138,91,.10)); border: 1px solid rgba(255,196,84,.28); border-radius: 12px; padding: 9px 10px; }
-.post-it-title { font-size: 12px; font-weight: 800; line-height: 1.3; }
-.post-it-txt { font-size: 11px; line-height: 1.45; color: var(--muted); margin-top: 4px; }
-@media (max-width: 380px) { .post-it-grid { grid-template-columns: 1fr; } }

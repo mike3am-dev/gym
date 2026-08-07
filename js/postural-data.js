@@ -2,8 +2,8 @@
    MOBILITÀ & POSTURA — dati statici della routine correttiva
    Pattern diagnosticato: Upper Crossed Syndrome (cifosi toracica,
    spalle anteposte) + femorali corti (leg raise ~50°, target 90°).
-   Protocolli di riferimento: approccio Janda. Nessun dato personale:
-   sono contenuti, non progressi (i progressi vivono in state.postural).
+   Protocolli di riferimento: approccio Janda. Solo contenuti: la sezione
+   è un promemoria consultabile, non registra nulla.
    ============================================================ */
 
 // categoria: morning | pre-workout | post-workout | gym-accessory
@@ -233,18 +233,4 @@ const POSTURAL = [
     muscoli: ["sovraspinato", "sottospinato", "piccolo rotondo"],
     rationale: "Per l'asimmetria alla spalla destra già notata da Denis."
   }
-];
-
-// Card informative, non tracciate: abitudini posturali durante la giornata
-const POSTURAL_REMINDERS = [
-  { id: "rem-telefono", icona: "📱", titolo: "Telefono all'altezza degli occhi",
-    testo: "Alza il telefono invece di far scendere la testa: ogni 15° di flessione del collo aumenta parecchio il carico sulla cervicale." },
-  { id: "rem-negozio", icona: "🏪", titolo: "In negozio",
-    testo: "Peso distribuito tra i due piedi, ginocchia mai bloccate. Cambia zona e postura tra un cliente e l'altro." },
-  { id: "rem-borsa", icona: "🎒", titolo: "Zaino, non tracolla",
-    testo: "Due spalline invece del peso su una spalla sola. Se proprio tracolla, portala incrociata e cambia lato spesso." },
-  { id: "rem-micropause", icona: "⏱️", titolo: "Micro-pause invisibili",
-    testo: "Retrazioni scapolari (stringi le scapole 3-5 sec) e chin tuck: si fanno mentre parli con un cliente, non si notano." },
-  { id: "rem-scarpe", icona: "👟", titolo: "Scarpe con supporto plantare",
-    testo: "Per i turni lunghi in piedi, un buon supporto d'arco cambia la giornata (e la sera la schiena)." }
 ];

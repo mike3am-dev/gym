@@ -33,10 +33,6 @@ const defaultState = () => ({
   photos: [],          // indice foto progressi: { date, angle, path } (file nel bucket privato)
   exNotes: {},         // appunti personali per esercizio: { exKey: "testo" } — persistenti
   customExercises: {}, // esercizi importati/creati dall'utente (stessa forma di EXERCISES)
-  postural: {          // mobilità & postura: un check per blocco al giorno
-    done: {},          // "YYYY-MM-DD": ["morning","pre-workout","post-workout"]
-    dismissed: []      // id dei promemoria giornalieri chiusi
-  },
   badges: [],          // id dei traguardi sbloccati
   migrations: [],      // id delle migrazioni già applicate
   version: 2
@@ -163,13 +159,11 @@ function applyMigrations(s) {
     }
     s.migrations.push("add-affondi-statici");
   }
-  // Mobilità & Postura: struttura del tracking per gli stati salvati prima
-  // della sezione (Object.assign in loadState non entra nei sotto-oggetti).
-  if (s.migrations.indexOf("postural-init") < 0) {
-    s.postural = s.postural || {};
-    s.postural.done = s.postural.done || {};
-    s.postural.dismissed = s.postural.dismissed || [];
-    s.migrations.push("postural-init");
+  // Mobilità & Postura: sezione di sola consultazione, niente tracciamento.
+  // Ripulisce lo stato di chi aveva già la versione con il check giornaliero.
+  if (s.migrations.indexOf("postural-no-tracking") < 0) {
+    delete s.postural;
+    s.migrations.push("postural-no-tracking");
   }
   return s;
 }

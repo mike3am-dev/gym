@@ -49,10 +49,9 @@ var api = new Function(
     enterDemoMode: enterDemoMode,
     renderWorkout: renderWorkout, renderProgress: renderProgress, renderGoals: renderGoals,
     renderCalendar: renderCalendar, renderMeals: renderMeals, renderPT: renderPT,
-    POSTURAL: POSTURAL, POSTURAL_REMINDERS: POSTURAL_REMINDERS, POSTURAL_BLOCKS: POSTURAL_BLOCKS,
-    renderPostural: renderPostural, renderPosturalHint: renderPosturalHint,
-    posturalToggle: posturalToggle, posturalDone: posturalDone, posturalStreak: posturalStreak,
-    posturalSuggested: posturalSuggested, setPosturalFilter: setPosturalFilter,
+    POSTURAL: POSTURAL, POSTURAL_BLOCKS: POSTURAL_BLOCKS,
+    renderPostural: renderPostural, setPosturalFilter: setPosturalFilter,
+    togglePosturalSection: togglePosturalSection, toggleExSection: toggleExSection,
     startGuided: startGuided, guidedCompleteSet: guidedCompleteSet, guidedQuality: guidedQuality,
     finishGuided: finishGuided, wrappedSlides: buildWrappedSlides,
     set: function (s) { state = s; },
@@ -584,38 +583,24 @@ var cov = api.muscleCoverage(30);
 ok("radar: il core con ripetizioni sopra target pesa più del petto a target", cov.pct.core > cov.pct.chest);
 
 
-/* ---- 18) MOBILITÀ & POSTURA ---- */
-var stp = api.defaultState();
-api.set(stp);
-ok("postural: 4 categorie tutte popolate",
+/* ---- 18) MOBILITÀ & POSTURA (sezione di sola consultazione) ---- */
+ok("postural: 4 blocchi tutti popolati",
    api.POSTURAL_BLOCKS.every(function(b){ return api.POSTURAL.some(function(e){ return e.categoria === b.cat; }); }));
 ok("postural: nessun id duplicato",
    api.POSTURAL.map(function(e){return e.id}).filter(function(v,i,a){return a.indexOf(v)!==i}).length === 0);
-ok("postural: ogni esercizio ha istruzioni e muscoli",
+ok("postural: ogni esercizio ha istruzioni, serie/rip e muscoli",
    api.POSTURAL.every(function(e){ return e.istruzioni && e.serieRip && e.muscoli && e.muscoli.length; }));
-ok("postural: 5 promemoria giornalieri", api.POSTURAL_REMINDERS.length === 5);
-ok("postural: nessun check attivo su stato nuovo", api.posturalDone("morning") === false);
-api.posturalToggle("morning");
-ok("postural: toggle segna il blocco come fatto oggi", api.posturalDone("morning") === true);
-ok("postural: il check finisce sulla data LOCALE (mai UTC)",
-   (api.get().postural.done[api.todayStr()] || []).indexOf("morning") >= 0);
-ok("postural: streak = 1 dopo il primo check", api.posturalStreak("morning") === 1);
-api.posturalToggle("morning");
-ok("postural: secondo toggle annulla", api.posturalDone("morning") === false);
-ok("postural: streak torna a 0", api.posturalStreak("morning") === 0);
-// serie di 3 giorni consecutivi (ieri, l'altro ieri, oggi)
-var stp2 = api.defaultState();
-var dd = new Date();
-for (var i = 0; i < 3; i++) { stp2.postural.done[api.localDate(dd)] = ["morning"]; dd.setDate(dd.getDate() - 1); }
-api.set(stp2);
-ok("postural: streak conta i giorni consecutivi", api.posturalStreak("morning") === 3);
-// oggi non spuntato non spezza la serie (giornata in corso), ieri sì
-delete stp2.postural.done[api.todayStr()];
-ok("postural: oggi ancora da fare non azzera la streak", api.posturalStreak("morning") === 2);
-ok("postural: gli accessori di Denis non entrano nel check giornaliero",
-   api.posturalSuggested() !== "gym-accessory");
 ok("postural: 3 accessori da discutere con Denis",
    api.POSTURAL.filter(function(e){ return e.categoria === "gym-accessory"; }).length === 3);
+ok("postural: nessun tracciamento nello stato (è un promemoria)",
+   api.defaultState().postural === undefined);
+var stMig = api.defaultState();
+stMig.postural = { done: { "2026-08-01": ["morning"] } };
+ok("postural: la migrazione ripulisce il vecchio tracciamento",
+   api.applyMigrations(stMig).postural === undefined);
+api.setPosturalFilter("morning");
+ok("postural: un secondo tocco richiude il blocco",
+   (api.setPosturalFilter("morning"), api.renderPostural(), true));
 
 /* ---- 17) SMOKE: ogni vista renderizza senza eccezioni (dati demo realistici) ---- */
 function smoke(name, fn) {
@@ -647,9 +632,10 @@ smoke("Guided: flusso completo primo esercizio", function(){
   api.guidedQuality("clean");
   api.finishGuided();   // con dati → fase finish (nessun commit, solo render)
 });
-smoke("Postura: tutte e 4 le categorie + promemoria", function(){
+smoke("Postura: apertura di tutti e 4 i blocchi + sezioni contraibili", function(){
   api.POSTURAL_BLOCKS.forEach(function(b){ api.setPosturalFilter(b.cat); });
-  api.renderPosturalHint();
+  api.togglePosturalSection(); api.togglePosturalSection();
+  api.toggleExSection(); api.toggleExSection();
 });
 smoke("Deload: banner + suggestion con scarico attivo", function(){
   var st3 = api.get();
