@@ -38,14 +38,25 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   color: var(--text);
   min-height: 100vh;
+  min-height: 100dvh;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  background: #060410;
+}
+
+/* Sfondo su un layer fisso dedicato: `background-attachment: fixed` sul body
+   su iOS rompe il posizionamento dei layer fixed (la bottom-nav finiva a metà schermo). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     radial-gradient(120% 70% at 50% -12%, rgba(124,58,237,.42), transparent 60%),
     radial-gradient(90% 70% at 112% 118%, rgba(255,138,91,.20), transparent 52%),
     radial-gradient(95% 75% at -12% 116%, rgba(255,45,149,.22), transparent 52%),
     radial-gradient(90% 60% at 50% 45%, rgba(91,141,239,.08), transparent 72%),
     #060410;
-  background-attachment: fixed;
 }
 
 /* superficie in vetro riutilizzabile */
@@ -411,7 +422,7 @@ input::placeholder { color: var(--faint); }
 .hist-notes { font-size: 12px; color: rgba(244,238,255,.75); background: rgba(255,255,255,.04); border-radius: 10px; padding: 8px 10px; margin-top: 8px; line-height: 1.5; }
 
 /* BOTTOM NAV */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(12,7,22,.72); backdrop-filter: blur(26px) saturate(160%); -webkit-backdrop-filter: blur(26px) saturate(160%); border-top: 1px solid var(--border); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom); -webkit-transform: translateZ(0); transform: translateZ(0); will-change: transform; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(12,7,22,.72); backdrop-filter: blur(26px) saturate(160%); -webkit-backdrop-filter: blur(26px) saturate(160%); border-top: 1px solid var(--border); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .nav-item { position: relative; flex: 1; background: none; border: none; padding: 11px 0 9px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: rgba(244,238,255,.34); font-family: inherit; transition: color .2s; }
 .nav-item.active { color: var(--pink); }
 .nav-item.active::before { content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 26px; height: 3px; border-radius: 0 0 4px 4px; background: var(--grad); box-shadow: 0 2px 10px var(--magenta); }
@@ -1114,3 +1125,54 @@ img.profile-avatar-lg.av-img { border: 7px solid transparent; background: linear
 
 /* Link password dimenticata */
 .acct-forgot { display: block; margin: 10px auto 0; background: transparent; border: none; color: var(--muted); font-size: 12.5px; font-weight: 700; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; font-family: inherit; }
+
+/* ============ MOBILITÀ & POSTURA ============ */
+/* Card compatta in cima ad Allena: il blocco che tocca adesso, un solo check */
+.post-hint { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, rgba(124,58,237,.20), rgba(168,85,247,.10)); border: 1px solid rgba(168,85,247,.34); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
+.post-hint.done { background: rgba(43,213,118,.10); border-color: rgba(43,213,118,.32); }
+.post-hint-txt { flex: 1; min-width: 0; cursor: pointer; }
+.post-hint-lbl { font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); }
+.post-hint-title { font-size: 16px; font-weight: 800; margin-top: 2px; }
+.post-hint-sub { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.post-check { flex-shrink: 0; min-width: 62px; background: rgba(255,255,255,.07); border: 1.5px solid rgba(168,85,247,.5); color: #fff; border-radius: 999px; padding: 9px 14px; font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer; transition: all .18s; }
+.post-check.on { background: rgba(43,213,118,.22); border-color: rgba(43,213,118,.6); color: #BFFFDC; }
+
+/* Blocco in fondo ad Allena: fisarmonica, esercizi solo al tocco */
+.post-row { border: 1px solid var(--border); background: var(--card); border-radius: 18px; margin-bottom: 10px; overflow: hidden; }
+.post-row.open { border-color: rgba(168,85,247,.42); }
+.post-row.done .post-row-ico { opacity: .55; }
+.post-row-head { display: flex; align-items: center; gap: 11px; padding: 13px 14px; cursor: pointer; }
+.post-row-ico { font-size: 19px; line-height: 1; flex-shrink: 0; }
+.post-row-txt { flex: 1; min-width: 0; }
+.post-row-title { font-size: 15px; font-weight: 800; }
+.post-row-sub { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.post-streak { font-size: 11px; font-weight: 800; color: var(--pink); }
+.post-row-body { display: none; padding: 0 12px 12px; }
+.post-row.open .post-row-body { display: block; }
+.post-row.open .post-row-head .ex-chevron { transform: rotate(180deg); }
+.post-row-denis { border-style: dashed; border-color: rgba(255,138,91,.42); }
+.post-row-denis .post-row-title { color: var(--orange); }
+.post-row-rem { border-style: dashed; }
+.post-card { background: rgba(255,255,255,.035); border: 1px solid var(--border); }
+.post-card .ex-num { font-size: 14px; }
+.post-opt { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: rgba(255,255,255,.07); border-radius: 8px; padding: 2px 6px; vertical-align: middle; }
+.post-card .ex-muscle { color: var(--purple); }
+.post-instr { font-size: 13px; line-height: 1.55; color: rgba(245,240,255,.88); padding-top: 12px; }
+.post-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.post-tag { font-size: 11px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 999px; padding: 4px 9px; }
+.post-why { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 10px; }
+.post-why-i { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; background: rgba(168,85,247,.24); color: #E9D5FF; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.post-timer { width: 100%; margin-top: 12px; background: rgba(124,58,237,.18); border: 1.5px solid rgba(168,85,247,.45); color: #fff; border-radius: 14px; padding: 11px; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; }
+.post-timer.on { background: rgba(255,45,149,.22); border-color: var(--magenta); }
+
+/* Sezione Esercizi contraibile */
+.sec-toggle { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.sec-toggle .ex-chevron { transition: transform .2s; font-size: 12px; }
+.sec-toggle.closed .ex-chevron { transform: rotate(-90deg); }
+
+/* Promemoria giornalieri: post-it compatti, informativi (niente check) */
+.post-it-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.post-it { background: linear-gradient(160deg, rgba(255,196,84,.16), rgba(255,138,91,.10)); border: 1px solid rgba(255,196,84,.28); border-radius: 12px; padding: 9px 10px; }
+.post-it-title { font-size: 12px; font-weight: 800; line-height: 1.3; }
+.post-it-txt { font-size: 11px; line-height: 1.45; color: var(--muted); margin-top: 4px; }
+@media (max-width: 380px) { .post-it-grid { grid-template-columns: 1fr; } }

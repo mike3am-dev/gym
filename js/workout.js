@@ -51,6 +51,10 @@ function workoutStats(w) {
 function renderWorkout() {
   const w = getWorkout(currentWorkoutId);
 
+  // Mobilità & postura: card in cima + blocco in fondo. Fuori dal ramo PT
+  // perché vale anche nei giorni con Denis (pre e post allenamento).
+  if (typeof renderPosturalHint === "function") { renderPosturalHint(); renderPostural(); }
+
   // La tab PT ha una vista tutta sua (seduta col PT, non una scheda classica)
   const isPT = !!w.pt;
   document.querySelector(".btn-guided").style.display = isPT ? "none" : "";
@@ -146,6 +150,7 @@ function renderWorkout() {
   }
 
   $("toggle-all").textContent = "Espandi tutto";
+  applyExSection();
   if (typeof renderRestHint === "function") renderRestHint();
   renderGuidedResume();
   renderDeloadBanner();
@@ -225,6 +230,21 @@ function renderPTWorkout(w) {
 }
 
 function toggleCard(i) { $(`ex-${i}`).classList.toggle("open"); }
+
+// Contrae/espande TUTTA la sezione Esercizi (la scheda del giorno):
+// con la mobilità sotto, la pagina è lunga e serve poterla chiudere.
+let exSectionOpen = true;
+function toggleExSection() {
+  exSectionOpen = !exSectionOpen;
+  applyExSection();
+}
+function applyExSection() {
+  const cards = $("ex-cards"), lbl = $("ex-section-lbl"), all = $("toggle-all");
+  if (!cards || !lbl) return;
+  cards.style.display = exSectionOpen ? "" : "none";
+  lbl.classList.toggle("closed", !exSectionOpen);
+  if (all) all.style.display = exSectionOpen ? "" : "none";
+}
 
 function toggleAll() {
   const cards = document.querySelectorAll("#ex-cards .ex-card");
