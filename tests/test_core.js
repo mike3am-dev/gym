@@ -52,6 +52,7 @@ var api = new Function(
     POSTURAL: POSTURAL, POSTURAL_BLOCKS: POSTURAL_BLOCKS,
     renderPostural: renderPostural, setPosturalFilter: setPosturalFilter,
     togglePosturalSection: togglePosturalSection, toggleExSection: toggleExSection,
+    resequenceSchedule: resequenceSchedule, rotationWorkouts: rotationWorkouts, assignDayKind: assignDayKind,
     startGuided: startGuided, guidedCompleteSet: guidedCompleteSet, guidedQuality: guidedQuality,
     finishGuided: finishGuided, wrappedSlides: buildWrappedSlides,
     set: function (s) { state = s; },
@@ -607,6 +608,61 @@ function smoke(name, fn) {
   try { fn(); ok("smoke: " + name, true); }
   catch (e) { ok("smoke: " + name + " → " + e.message, false); }
 }
+/* ---- ROTAZIONE AUTOMATICA DELLE SCHEDE NEL CALENDARIO ---- */
+(function () {
+  var rot = api.rotationWorkouts();
+  ok("rotazione: contiene solo schede non-PT", rot.length >= 2 && !rot.some(function (w) { return w.pt; }));
+
+  function fresh() { var s = api.defaultState(); s.schedule = {}; s.sessions = []; api.set(s); return s; }
+  function ids() {
+    var s = api.get();
+    return Object.keys(s.schedule).sort().map(function (d) { return s.schedule[d].workoutId; });
+  }
+
+  // 1) tre giorni consecutivi → alternanza in ordine di rotazione
+  var s = fresh();
+  ["2026-09-07", "2026-09-09", "2026-09-11"].forEach(function (d) { api.assignDayKind(d, "scheda"); });
+  ok("rotazione: giorni in sequenza seguono l'ordine delle schede",
+     ids().join(",") === [rot[0].id, rot[1].id, rot[2 % rot.length].id].join(","));
+
+  // 2) inserimento a metà settimana → i successivi slittano restando alternati
+  api.assignDayKind("2026-09-08", "scheda");
+  var after = ids();
+  ok("rotazione: inserendo un giorno in mezzo i successivi si riallineano",
+     after.join(",") === [rot[0].id, rot[1].id, rot[2 % rot.length].id, rot[3 % rot.length].id].join(","));
+
+  // 3) un giorno PT non consuma un posto nella rotazione delle schede
+  s = fresh();
+  api.assignDayKind("2026-09-07", "scheda");
+  api.assignDayKind("2026-09-08", "pt");
+  api.assignDayKind("2026-09-09", "scheda");
+  ok("rotazione: il giorno PT non interrompe l'alternanza delle schede",
+     api.get().schedule["2026-09-09"].workoutId === rot[1].id);
+  ok("rotazione: il giorno PT resta PT", api.get().schedule["2026-09-08"].pt === true);
+
+  // 4) i giorni già fatti sono congelati e fanno da àncora
+  s = fresh();
+  s.schedule["2026-09-07"] = { workoutId: rot[1].id, done: true };
+  api.assignDayKind("2026-09-09", "scheda");
+  ok("rotazione: un giorno già fatto non viene riscritto",
+     api.get().schedule["2026-09-07"].workoutId === rot[1].id);
+  ok("rotazione: si riparte dalla scheda dopo l'ultima fatta",
+     api.get().schedule["2026-09-09"].workoutId === rot[2 % rot.length].id);
+
+  // 5) rimuovendo un giorno i successivi riprendono l'alternanza
+  s = fresh();
+  ["2026-09-07", "2026-09-09", "2026-09-11"].forEach(function (d) { api.assignDayKind(d, "scheda"); });
+  delete api.get().schedule["2026-09-09"];
+  api.resequenceSchedule();
+  ok("rotazione: togliendo un giorno i successivi slittano indietro",
+     api.get().schedule["2026-09-11"].workoutId === rot[1].id);
+
+  // 6) idempotenza: rilanciarla non cambia nulla
+  var before = ids().join(",");
+  api.resequenceSchedule(); api.resequenceSchedule();
+  ok("rotazione: resequenceSchedule è idempotente", ids().join(",") === before);
+})();
+
 api.enterDemoMode();                     // stato realistico completo (Alex)
 smoke("Allena (renderWorkout)", function(){ api.renderWorkout(); });
 smoke("Progressi (grafici+radar+PT+storico)", function(){ api.renderProgress(); });

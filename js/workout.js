@@ -309,6 +309,8 @@ function commitSession(workoutId, exercises, meta) {
     });
   }
   state.schedule[todayStr()] = { workoutId, done: true };
+  // giornata congelata: i giorni programmati dopo si riallineano all'alternanza
+  if (typeof resequenceSchedule === "function") resequenceSchedule();
   // la preparazione è servita: gli obiettivi tornano al motore di progressione
   Object.keys(exercises).forEach(k => { if (state.prep) delete state.prep[k]; });
 

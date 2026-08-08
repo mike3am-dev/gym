@@ -669,6 +669,7 @@ Regole: "gruppo" ∈ petto|schiena|gambe|spalle|braccia|core. "attrezzo" ∈ bil
     Object.entries(state.schedule || {}).forEach(([d, sc]) => {
       if (sc.workoutId === id && d >= t && !sc.done) { removedDays[d] = sc; delete state.schedule[d]; }
     });
+    if (typeof resequenceSchedule === "function") resequenceSchedule();
     saveState(state);
     if (typeof renderWorkoutChips === "function") { renderWorkoutChips(); renderWorkout(); }
     if (typeof toastUndo === "function") toastUndo("🗑 Scheda eliminata.", function () {

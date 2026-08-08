@@ -166,16 +166,24 @@ function openDay(ds) {
     $("modal-body").innerHTML = sessionDetailHTML(session);
   } else {
     const sched = state.schedule[ds];
+    const isPT = !!(sched && (sched.pt || (getWorkout(sched.workoutId) || {}).pt));
+    const curW = sched && !isPT ? getWorkout(sched.workoutId) : null;
+    const rot = rotationWorkouts();
     $("modal-body").innerHTML = `
-      <p class="modal-q">Quale scheda vuoi programmare?</p>
+      <p class="modal-q">Che allenamento è?</p>
       <div class="modal-opts ${sched ? 'has-sel' : ''}">
-        ${SCHEDULABLE().map(w => `
-          <button class="modal-opt ${sched && sched.workoutId === w.id ? 'sel' : ''}"
-                  style="border-color:${w.color};color:${sched && sched.workoutId === w.id ? w.color : 'var(--text)'}" onclick="assignDay('${ds}','${w.id}')">
-            <span class="modal-opt-emoji">${w.emoji}</span>
-            <span>${w.name}</span>
-          </button>`).join("")}
+        <button class="modal-opt ${curW ? 'sel' : ''}"
+                style="border-color:${curW ? curW.color : 'var(--border)'};color:${curW ? curW.color : 'var(--text)'}" onclick="assignDayKind('${ds}','scheda')">
+          <span class="modal-opt-emoji">${curW ? curW.emoji : '🏋️'}</span>
+          <span>Scheda${curW ? `<br><small class="modal-opt-sub">${curW.name}</small>` : ''}</span>
+        </button>
+        <button class="modal-opt ${isPT ? 'sel' : ''}"
+                style="border-color:${PT_WORKOUT.color};color:${isPT ? PT_WORKOUT.color : 'var(--text)'}" onclick="assignDayKind('${ds}','pt')">
+          <span class="modal-opt-emoji">${PT_WORKOUT.emoji}</span>
+          <span>Personal Trainer</span>
+        </button>
       </div>
+      ${rot.length > 1 ? `<p class="modal-hint">Le schede si alternano da sole: ${rot.map(w => w.name).join(" → ")} → …</p>` : ''}
       ${sched ? `<button class="modal-clear" onclick="clearDay('${ds}')">🗑 Rimuovi programmazione</button>` : ''}`;
   }
   $("modal").classList.add("show");
@@ -233,6 +241,73 @@ function deleteSession(id) {
   });
 }
 
+/* ---------- ROTAZIONE AUTOMATICA DELLE SCHEDE ----------
+   Nel calendario si sceglie solo il TIPO di giornata (scheda vs PT):
+   quale scheda tocchi lo decide l'app, alternando in ordine tutte le
+   schede non-PT. Ogni inserimento/rimozione ricalcola i giorni successivi,
+   così l'alternanza regge anche aggiungendo un giorno a metà settimana. */
+
+// Le schede che entrano nella rotazione (tutte le non-PT dell'utente).
+function rotationWorkouts() {
+  return ALL_WORKOUTS().filter(w => !w.pt);
+}
+
+function isPTEntry(s) {
+  return !!(s && (s.pt || (getWorkout(s.workoutId) || {}).pt));
+}
+
+// Un giorno è "congelato" se è già stato allenato: non lo tocchiamo,
+// resta fedele a quello che Mike ha davvero fatto e fa da àncora per il resto.
+function isFrozenDay(ds, s) {
+  return !!(s && s.done) || state.sessions.some(x => x.date === ds);
+}
+
+// Riassegna le schede ai giorni non congelati, in ordine cronologico.
+function resequenceSchedule() {
+  const rot = rotationWorkouts();
+  if (!rot.length) return;
+  const idxOf = id => rot.findIndex(w => w.id === id);
+
+  const days = Object.keys(state.schedule || {})
+    .filter(ds => !isPTEntry(state.schedule[ds]))
+    .sort();
+
+  let cursor = -1;  // indice dell'ultima scheda fissata; -1 → si riparte dalla prima
+  days.forEach(ds => {
+    const s = state.schedule[ds];
+    if (isFrozenDay(ds, s)) {
+      const i = idxOf(s.workoutId);
+      if (i >= 0) cursor = i;
+      return;
+    }
+    cursor = (cursor + 1) % rot.length;
+    if (s.workoutId !== rot[cursor].id) {
+      state.schedule[ds] = Object.assign({}, s, { workoutId: rot[cursor].id });
+    }
+  });
+}
+
+// Chiamata dal modale del giorno: kind = "scheda" | "pt".
+function assignDayKind(ds, kind) {
+  const prev = state.schedule[ds];
+  if (kind === "pt") {
+    state.schedule[ds] = { workoutId: PT_WORKOUT.id, pt: true, done: prev ? !!prev.done : false };
+    if (prev && prev.note) state.schedule[ds].note = prev.note;
+  } else {
+    const rot = rotationWorkouts();
+    if (!rot.length) return;
+    // segnaposto: ci pensa resequenceSchedule() a scegliere quella giusta
+    state.schedule[ds] = { workoutId: rot[0].id, done: prev ? !!prev.done : false };
+    if (prev && prev.note) state.schedule[ds].note = prev.note;
+  }
+  resequenceSchedule();
+  saveState(state);
+  closeModal();
+  renderCalendar();
+  const w = getWorkout(state.schedule[ds].workoutId);
+  if (w) toast(`${w.emoji} ${fmtShort(ds)} → ${w.name}`);
+}
+
 function assignDay(ds, workoutId) {
   const prev = state.schedule[ds];
   const w = getWorkout(workoutId);
@@ -246,6 +321,7 @@ function assignDay(ds, workoutId) {
 
 function clearDay(ds) {
   delete state.schedule[ds];
+  resequenceSchedule();   // togliendo un giorno l'alternanza dei successivi slitta
   saveState(state);
   closeModal();
   renderCalendar();
