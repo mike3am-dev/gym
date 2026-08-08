@@ -1167,6 +1167,12 @@ img.profile-avatar-lg.av-img { border: 7px solid transparent; background: linear
 .post-timer { width: 100%; margin-top: 12px; background: rgba(124,58,237,.18); border: 1.5px solid rgba(168,85,247,.45); color: #fff; border-radius: 14px; padding: 11px; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; }
 .post-timer.on { background: rgba(255,45,149,.22); border-color: var(--magenta); }
 
+/* Disegno dell'esercizio (dataset .gif o generato .png) */
+.post-media:not(:empty) { padding-top: 12px; }
+.post-gif { width: 100%; max-width: 260px; border-radius: 16px; border: 1px solid var(--border); background: #fff; display: block; margin: 0 auto; }
+.pp-media { display: flex; align-items: center; justify-content: center; }
+.pp-gif { width: 240px; max-width: 74vw; border-radius: 20px; border: 1px solid var(--border); background: #fff; box-shadow: var(--shadow); }
+
 /* Perché questa routine */
 .post-why-card { display: flex; flex-direction: column; gap: 14px; }
 .post-why-row { display: flex; gap: 11px; align-items: flex-start; }

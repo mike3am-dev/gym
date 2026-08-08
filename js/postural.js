@@ -44,6 +44,23 @@ function posturalWhenLabel(cat) {
   return "Consigliata adesso";
 }
 
+
+/* ---------- IMMAGINI ----------
+   Il disegno dell'esercizio è dichiarato in `img` (nome del file in
+   assets/gifs/, .gif del dataset o .png generato): niente tentativi al buio,
+   niente 404. Chi non ce l'ha non mostra nulla e resta l'icona 🧘.
+   Se il file venisse rimosso, onerror toglie l'immagine e scopre l'icona. */
+function posturalImgHTML(ex, cls) {
+  if (!ex.img) return "";
+  return `<img class="${cls}" alt="" src="assets/gifs/${ex.img}"
+    onerror="posturalImgErr(this)">`;
+}
+function posturalImgErr(img) {
+  const ph = img.parentNode && img.parentNode.querySelector(".pp-ico");
+  if (ph) ph.style.display = "";
+  img.parentNode && img.parentNode.removeChild(img);
+}
+
 /* ---------- VISTA ---------- */
 let posturalFilter = null;      // blocco aperto ("morning"…) oppure null
 let posturalOpen = {};          // card esercizio espanse (id → true)
@@ -74,6 +91,7 @@ function posturalCardHTML(ex, isDenis) {
         <span class="sec-arrow">▾</span>
       </div>
       <div class="ex-body">
+        <div class="post-media">${posturalImgHTML(ex, "post-gif")}</div>
         <div class="post-instr">${ex.istruzioni}</div>
         <div class="post-tags">${ex.muscoli.map(m => `<span class="post-tag">${m}</span>`).join("")}</div>
         ${ex.rationale ? `<div class="post-why"><span class="post-why-i">i</span>${ex.rationale}</div>` : ""}
@@ -249,7 +267,10 @@ function renderPosturalPlayer() {
     </div>
     <div class="g-bar"><div class="g-bar-fill" style="width:${pct}%"></div></div>
     <div class="g-body pp-body">
-      <div class="pp-ico" style="background:${b.color}22;border-color:${b.color}66">🧘</div>
+      <div class="pp-media">
+        <div class="pp-ico" style="background:${b.color}22;border-color:${b.color}66;${ex.img ? "display:none" : ""}">🧘</div>
+        ${posturalImgHTML(ex, "pp-gif")}
+      </div>
       <div class="pp-name">${ex.nome}</div>
       <div class="pp-meta">${ex.serieRip} · ${ex.lato === "per-lato" ? "per lato" : "bilaterale"}${ex.attrezzatura !== "nessuna" ? " · " + ex.attrezzatura : ""}</div>
       <div class="pp-instr">${ex.istruzioni}</div>

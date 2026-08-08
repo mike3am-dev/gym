@@ -6,6 +6,8 @@
    è un promemoria consultabile, non registra nulla.
    ============================================================ */
 
+// img: nome del file in assets/gifs/ (gif del dataset o png generato).
+// Assente = nessun disegno disponibile: la vista mostra l'icona 🧘.
 // categoria: morning | pre-workout | post-workout | gym-accessory
 // lato: bilaterale | per-lato
 // attrezzatura: nessuna | bastone | foam-roller | elastico | cavi
@@ -14,6 +16,7 @@ const POSTURAL = [
   {
     id: "cat-camel-am",
     nome: "Cat-Camel",
+    img: "cat_camel.png",
     categoria: "morning",
     attrezzatura: "nessuna",
     serieRip: "8-10 rip",
@@ -25,6 +28,7 @@ const POSTURAL = [
   {
     id: "wall-angels",
     nome: "Wall Angels",
+    img: "wall_angels.png",
     categoria: "morning",
     attrezzatura: "nessuna",
     serieRip: "2x10",
@@ -36,6 +40,7 @@ const POSTURAL = [
   {
     id: "chin-tuck-am",
     nome: "Chin Tuck (flessione craniocervicale)",
+    img: "chin_tuck.png",
     categoria: "morning",
     attrezzatura: "nessuna",
     serieRip: "10 rip · hold 5 sec",
@@ -48,6 +53,7 @@ const POSTURAL = [
   {
     id: "foam-toracico",
     nome: "Foam roller toracico dinamico",
+    img: "foam_roller_toracico.png",
     categoria: "morning",
     attrezzatura: "foam-roller",
     serieRip: "8-10 rip",
@@ -59,6 +65,7 @@ const POSTURAL = [
   {
     id: "deep-lunge-reach",
     nome: "Deep lunge con reach/rotazione",
+    img: "deep_lunge_con_reach_rotazione.gif",
     categoria: "morning",
     attrezzatura: "nessuna",
     serieRip: "5 rip per lato",
@@ -73,6 +80,7 @@ const POSTURAL = [
   {
     id: "pass-through",
     nome: "Overhead Pass Through con bastone",
+    img: "overhead-pass-through.png",
     categoria: "pre-workout",
     attrezzatura: "bastone",
     serieRip: "10 rip",
@@ -95,6 +103,7 @@ const POSTURAL = [
   {
     id: "cat-camel-pre",
     nome: "Cat-Camel",
+    img: "cat_camel.png",
     categoria: "pre-workout",
     attrezzatura: "nessuna",
     serieRip: "8 rip",
@@ -106,6 +115,7 @@ const POSTURAL = [
   {
     id: "greatest-stretch",
     nome: "World's Greatest Stretch",
+    img: "world_s_greatest_stretch.gif",
     categoria: "pre-workout",
     attrezzatura: "nessuna",
     serieRip: "5 rip per lato",
@@ -117,6 +127,7 @@ const POSTURAL = [
   {
     id: "chin-tuck-pre",
     nome: "Chin Tuck",
+    img: "chin_tuck.png",
     categoria: "pre-workout",
     attrezzatura: "nessuna",
     serieRip: "10 rip",
@@ -130,6 +141,7 @@ const POSTURAL = [
   {
     id: "dog-cobra",
     nome: "Downward Dog to Cobra",
+    img: "downward_dog_to_cobra.gif",
     categoria: "post-workout",
     attrezzatura: "nessuna",
     serieRip: "8-10 rip lente",
@@ -141,6 +153,7 @@ const POSTURAL = [
   {
     id: "overhead-stretch-post",
     nome: "Overhead Shoulder Stretch dietro la schiena",
+    img: "overhead_shoulder_stretch_dietro_la_schiena.gif",
     categoria: "post-workout",
     attrezzatura: "nessuna",
     serieRip: "20-30 sec per lato",
@@ -177,6 +190,7 @@ const POSTURAL = [
   {
     id: "femorali-denis",
     nome: "Stretching femorali dedicato",
+    img: "stretching_femorali_dedicato.gif",
     categoria: "post-workout",
     attrezzatura: "nessuna",
     serieRip: "come concordato con Denis",
@@ -203,6 +217,7 @@ const POSTURAL = [
   {
     id: "face-pull",
     nome: "Face Pull ai cavi",
+    img: "face_pull.png",
     categoria: "gym-accessory",
     attrezzatura: "cavi",
     serieRip: "3x12-15",
@@ -214,6 +229,7 @@ const POSTURAL = [
   {
     id: "prone-y-raise",
     nome: "Prone Y-Raise (Blackburn)",
+    img: "prone_y_raise.png",
     categoria: "gym-accessory",
     attrezzatura: "nessuna",
     serieRip: "2x15",
@@ -225,6 +241,7 @@ const POSTURAL = [
   {
     id: "extra-rot-elastico",
     nome: "Extra-rotazione di spalla con elastico",
+    img: "extra_rotazione_di_spalla_con_elastico.gif",
     categoria: "gym-accessory",
     attrezzatura: "elastico",
     serieRip: "15-20 rip per lato",
