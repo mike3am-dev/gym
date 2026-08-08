@@ -188,4 +188,5 @@ function switchView(view, btn) {
   if (view === "obiettivi") renderGoals();
   if (view === "calendario") renderCalendar();
   if (view === "pasti") renderMeals();
+  if (view === "postura") renderPostural();
 }

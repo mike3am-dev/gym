@@ -51,9 +51,6 @@ function workoutStats(w) {
 function renderWorkout() {
   const w = getWorkout(currentWorkoutId);
 
-  // Mobilità & postura: sezione sotto agli esercizi. Fuori dal ramo PT
-  // perché vale anche nei giorni con Denis (pre e post allenamento).
-  if (typeof renderPostural === "function") renderPostural();
 
   // La tab PT ha una vista tutta sua (seduta col PT, non una scheda classica)
   const isPT = !!w.pt;

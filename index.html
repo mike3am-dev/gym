@@ -10,7 +10,7 @@
 <title>Allenamento</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.png">
-<link rel="stylesheet" href="css/styles.css?v=202608080929">
+<link rel="stylesheet" href="css/styles.css?v=202608080938">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
@@ -44,11 +44,11 @@
   </div>
   <div id="ex-cards"></div>
 
-  <div class="ex-head">
-    <span class="section-label sec-toggle" id="post-section-lbl" onclick="togglePosturalSection()">🧘 Mobilità &amp; Postura <span class="sec-arrow">▾</span></span>
-  </div>
-  <div id="postural-block"></div>
+</div>
 
+<!-- ============ POSTURA ============ -->
+<div class="section" id="section-postura">
+  <div id="postural-block"></div>
 </div>
 
 <!-- ============ CALENDARIO ============ -->
@@ -183,6 +183,7 @@
 <!-- ============ BOTTOM NAV ============ -->
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="switchView('workout', this)"><span class="nav-ico">🏋️</span><span class="nav-lbl">Allena</span></button>
+  <button class="nav-item" onclick="switchView('postura', this)"><span class="nav-ico">🧘</span><span class="nav-lbl">Postura</span></button>
   <button class="nav-item" onclick="switchView('calendario', this)"><span class="nav-ico">📅</span><span class="nav-lbl">Calendario</span></button>
   <button class="nav-item" onclick="switchView('progressi', this)"><span class="nav-ico">📈</span><span class="nav-lbl">Progressi</span></button>
   <button class="nav-item" onclick="switchView('pasti', this)"><span class="nav-ico">🍽️</span><span class="nav-lbl">Pasti</span></button>
@@ -209,34 +210,37 @@
 <!-- ============ GUIDED OVERLAY ============ -->
 <div class="guided-overlay" id="guided"></div>
 
+<!-- ============ PLAYER ROUTINE POSTURALE ============ -->
+<div class="guided-overlay postural-player" id="postural-player"></div>
+
 <!-- ============ RECAP OVERLAY ============ -->
 <div class="recap-overlay" id="recap"></div>
 
 <div class="toast" id="toast"></div>
 
 <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(function(){}); }</script>
-<script src="js/data.js?v=202608080929"></script>
-<script src="js/exercise-media.js?v=202608080929"></script>
-<script src="js/cues.js?v=202608080929"></script>
-<script src="js/postural-data.js?v=202608080929"></script>
-<script src="js/storage.js?v=202608080929"></script>
-<script src="js/core.js?v=202608080929"></script>
-<script src="js/deload.js?v=202608080929"></script>
-<script src="js/workout.js?v=202608080929"></script>
-<script src="js/guided.js?v=202608080929"></script>
-<script src="js/calendar.js?v=202608080929"></script>
-<script src="js/progress.js?v=202608080929"></script>
-<script src="js/profile.js?v=202608080929"></script>
-<script src="js/meals.js?v=202608080929"></script>
-<script src="js/postural.js?v=202608080929"></script>
-<script src="js/init.js?v=202608080929"></script>
-<script src="js/wrapped.js?v=202608080929"></script>
-<script src="js/setup.js?v=202608080929"></script>
+<script src="js/data.js?v=202608080938"></script>
+<script src="js/exercise-media.js?v=202608080938"></script>
+<script src="js/cues.js?v=202608080938"></script>
+<script src="js/postural-data.js?v=202608080938"></script>
+<script src="js/storage.js?v=202608080938"></script>
+<script src="js/core.js?v=202608080938"></script>
+<script src="js/deload.js?v=202608080938"></script>
+<script src="js/workout.js?v=202608080938"></script>
+<script src="js/guided.js?v=202608080938"></script>
+<script src="js/calendar.js?v=202608080938"></script>
+<script src="js/progress.js?v=202608080938"></script>
+<script src="js/profile.js?v=202608080938"></script>
+<script src="js/meals.js?v=202608080938"></script>
+<script src="js/postural.js?v=202608080938"></script>
+<script src="js/init.js?v=202608080938"></script>
+<script src="js/wrapped.js?v=202608080938"></script>
+<script src="js/setup.js?v=202608080938"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/demo.js?v=202608080929"></script>
-<script src="js/cloud-config.js?v=202608080929"></script>
-<script src="js/cloud.js?v=202608080929"></script>
-<script src="js/crew.js?v=202608080929"></script>
-<script src="js/photos.js?v=202608080929"></script>
+<script src="js/demo.js?v=202608080938"></script>
+<script src="js/cloud-config.js?v=202608080938"></script>
+<script src="js/cloud.js?v=202608080938"></script>
+<script src="js/crew.js?v=202608080938"></script>
+<script src="js/photos.js?v=202608080938"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ var docStub = {
   body: { appendChild:function(){}, removeChild:function(){}, style:{} },
   visibilityState: "visible"
 };
-var winStub = { addEventListener:function(){} };
+var winStub = { addEventListener:function(){}, scrollTo:function(){} };
 var lsStub = { _d:{}, getItem:function(k){return this._d[k]||null}, setItem:function(k,v){this._d[k]=String(v)}, removeItem:function(k){delete this._d[k]} };
 function ChartStub(){ this.destroy=function(){}; } ChartStub.defaults={font:{}};
 
@@ -50,8 +50,10 @@ var api = new Function(
     renderWorkout: renderWorkout, renderProgress: renderProgress, renderGoals: renderGoals,
     renderCalendar: renderCalendar, renderMeals: renderMeals, renderPT: renderPT,
     POSTURAL: POSTURAL, POSTURAL_BLOCKS: POSTURAL_BLOCKS,
-    renderPostural: renderPostural, setPosturalFilter: setPosturalFilter,
-    togglePosturalSection: togglePosturalSection, toggleExSection: toggleExSection,
+    renderPostural: renderPostural, setPosturalFilter: setPosturalFilter, toggleExSection: toggleExSection,
+    posturalSuggested: posturalSuggested, startPosturalRoutine: startPosturalRoutine,
+    pplayStep: pplayStep, pplayTimer: pplayTimer, closePosturalRoutine: closePosturalRoutine,
+    posturalOf: posturalOf, switchView: switchView,
     resequenceSchedule: resequenceSchedule, rotationWorkouts: rotationWorkouts, assignDayKind: assignDayKind,
     startGuided: startGuided, guidedCompleteSet: guidedCompleteSet, guidedQuality: guidedQuality,
     finishGuided: finishGuided, wrappedSlides: buildWrappedSlides,
@@ -599,9 +601,28 @@ var stMig = api.defaultState();
 stMig.postural = { done: { "2026-08-01": ["morning"] } };
 ok("postural: la migrazione ripulisce il vecchio tracciamento",
    api.applyMigrations(stMig).postural === undefined);
-api.setPosturalFilter("morning");
-ok("postural: un secondo tocco richiude il blocco",
-   (api.setPosturalFilter("morning"), api.renderPostural(), true));
+// suggerimento contestuale (nessun tracciamento: dipende da giornata e ora)
+var stSug = api.defaultState();
+stSug.sessions = [{ id: 1, date: api.todayStr(), workoutId: "w", exercises: {} }];
+api.set(stSug);
+ok("postural: allenamento già fatto oggi → propone il post-workout",
+   api.posturalSuggested() === "post-workout");
+var stSug2 = api.defaultState();
+stSug2.schedule = {}; stSug2.schedule[api.todayStr()] = { workoutId: "w" };
+api.set(stSug2);
+ok("postural: giorno di palestra non ancora fatto → propone il pre-workout",
+   api.posturalSuggested() === "pre-workout");
+api.set(api.defaultState());
+ok("postural: giorno libero → risveglio o post, mai gli accessori di Denis",
+   ["morning", "post-workout"].indexOf(api.posturalSuggested()) >= 0);
+// player della routine
+api.startPosturalRoutine("morning");
+var nMorning = api.posturalOf("morning").length;
+for (var pi = 0; pi < nMorning; pi++) api.pplayStep(1);
+ok("postural player: dopo l'ultimo esercizio arriva la schermata finale",
+   (api.pplayStep(0), true));
+api.closePosturalRoutine();
+ok("postural player: la chiusura azzera lo stato", (api.pplayStep(1), true));
 
 /* ---- 17) SMOKE: ogni vista renderizza senza eccezioni (dati demo realistici) ---- */
 function smoke(name, fn) {
@@ -688,9 +709,12 @@ smoke("Guided: flusso completo primo esercizio", function(){
   api.guidedQuality("clean");
   api.finishGuided();   // con dati → fase finish (nessun commit, solo render)
 });
-smoke("Postura: apertura di tutti e 4 i blocchi + sezioni contraibili", function(){
+smoke("Postura: tab, blocchi, player e timer", function(){
+  api.switchView("postura", null);
   api.POSTURAL_BLOCKS.forEach(function(b){ api.setPosturalFilter(b.cat); });
-  api.togglePosturalSection(); api.togglePosturalSection();
+  api.startPosturalRoutine("post-workout");
+  api.pplayTimer(20); api.pplayStep(1); api.pplayStep(-1);
+  api.closePosturalRoutine();
   api.toggleExSection(); api.toggleExSection();
 });
 smoke("Deload: banner + suggestion con scarico attivo", function(){
