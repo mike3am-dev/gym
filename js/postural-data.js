@@ -92,6 +92,7 @@ const POSTURAL = [
   {
     id: "behind-back-stick",
     nome: "Behind-the-Back Shoulder Stretch con bastone",
+    img: "behind_the_back_shoulder_stretch_con_bastone.png",
     categoria: "pre-workout",
     attrezzatura: "bastone",
     serieRip: "10 rip dinamiche",
@@ -166,6 +167,7 @@ const POSTURAL = [
   {
     id: "doorway-pec",
     nome: "Doorway Pec Stretch",
+    img: "doorway_pec_stretch.png",
     categoria: "post-workout",
     attrezzatura: "nessuna",
     serieRip: "20 sec x 5 rip",
@@ -178,6 +180,7 @@ const POSTURAL = [
   {
     id: "prone-cobra",
     nome: "Prone Cobra",
+    img: "prone_cobra.png",
     categoria: "post-workout",
     attrezzatura: "nessuna",
     serieRip: "8-10 rip · hold 5-10 sec",
@@ -203,6 +206,7 @@ const POSTURAL = [
   {
     id: "mobility-swimmer",
     nome: "Mobility Swimmer",
+    img: "mobility_swimmer.png",
     categoria: "post-workout",
     attrezzatura: "nessuna",
     serieRip: "8-10 rip",
