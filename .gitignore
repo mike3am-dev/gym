@@ -5,3 +5,7 @@ Dataset/
 .DS_Store
 .claude.json
 .claude/
+
+# Screenshot e materiale di lavoro: i nuovi non finiscono nel repo
+# (i 30 già committati restano dove sono, per scelta)
+Postural/
