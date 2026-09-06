@@ -2,8 +2,8 @@
 
 PWA personale di allenamento/nutrizione in italiano. Uso reale: Mike (+ Lorenzo e altri amici via Crew). Obiettivo massa, segue anche un PT umano (Denis) → **i consigli dell'app sono suggerimenti, mai imposizioni**.
 
-- **Live**: https://c4gv4kf4d7-dev.github.io/gym/
-- **Repo**: `c4gv4kf4d7-dev/gym` (GitHub Pages, branch `main`)
+- **Live**: https://mike3am-dev.github.io/gym/
+- **Repo**: `mike3am-dev/gym` (GitHub Pages, branch `main`)
 
 ## Stack
 

@@ -33,14 +33,14 @@ echo "→ push OK. Verifica build:"
 TOK=$(git remote get-url origin | sed -n 's|https://\([^@]*\)@github.com.*|\1|p' | sed 's/^[^:]*://')
 for i in $(seq 1 20); do
   sleep 20
-  INFO=$(curl -s -m 15 "https://api.github.com/repos/c4gv4kf4d7-dev/gym/actions/runs?per_page=1" || true)
+  INFO=$(curl -s -m 15 "https://api.github.com/repos/mike3am-dev/gym/actions/runs?per_page=1" || true)
   ST=$(echo "$INFO" | python3 -c "import sys,json;r=json.load(sys.stdin)['workflow_runs'][0];print(r['status'],str(r.get('conclusion')))" 2>/dev/null || echo "?")
-  LIVE=$(curl -s -m 15 "https://c4gv4kf4d7-dev.github.io/gym/index.html?cb=$RANDOM" | grep -o "v=[0-9]\{8,12\}" | head -1)
+  LIVE=$(curl -s -m 15 "https://mike3am-dev.github.io/gym/index.html?cb=$RANDOM" | grep -o "v=[0-9]\{8,12\}" | head -1)
   echo "  [$i] build: $ST | live: $LIVE"
   [ "$LIVE" = "${V%[a-z]}" ] || [ "$LIVE" = "$V" ] && { echo "✅ LIVE AGGIORNATO ($V)"; exit 0; }
   case "$ST" in *failure*)
     RID=$(echo "$INFO" | python3 -c "import sys,json;print(json.load(sys.stdin)['workflow_runs'][0]['id'])")
-    curl -s -m 15 -X POST -H "Authorization: Bearer $TOK" "https://api.github.com/repos/c4gv4kf4d7-dev/gym/actions/runs/$RID/rerun-failed-jobs" -o /dev/null
+    curl -s -m 15 -X POST -H "Authorization: Bearer $TOK" "https://api.github.com/repos/mike3am-dev/gym/actions/runs/$RID/rerun-failed-jobs" -o /dev/null
     echo "  ↻ deploy fallito → rerun automatico";;
   esac
 done

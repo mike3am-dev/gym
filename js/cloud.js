@@ -196,7 +196,7 @@
     if (!email) { setAuthMsg("Scrivi prima la tua email nel campo qui sopra, poi ritocca il link."); return; }
     setAuthMsg("Invio email di recupero…");
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://c4gv4kf4d7-dev.github.io/gym/"
+      redirectTo: "https://mike3am-dev.github.io/gym/"
     });
     if (error) setAuthMsg("Errore: " + error.message);
     else setAuthMsg("📬 Email inviata a " + email + ": apri il link che trovi dentro e potrai scegliere una nuova password.");
