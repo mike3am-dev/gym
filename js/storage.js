@@ -165,7 +165,123 @@ function applyMigrations(s) {
     delete s.postural;
     s.migrations.push("postural-no-tracking");
   }
+  // Da 2 schede lunghe a 3 corte (Gambe / Spinta / Tirata), stessi esercizi.
+  // Parte SOLO se trova esattamente le due schede di Mike: per chiunque altro
+  // (Lorenzo, la Crew, la demo) non tocca nulla.
+  restructureThreeSplit(s);
   return s;
+}
+
+/* ---------- RISTRUTTURAZIONE: 2 schede → Gambe / Spinta / Tirata ----------
+   - lo storico è per chiave esercizio: le nuove schede riusano le stesse
+     chiavi, quindi storico, PR e progressione restano agganciati;
+   - "Alzate laterali manubri" era in entrambe con due chiavi diverse:
+     le sessioni della chiave meno recente passano a quella più recente
+     (un solo storico, PR = massimo tra i due);
+   - le due schede vecchie NON si cancellano: diventano archiviate, così
+     sessioni passate, calendario e riepiloghi mostrano il nome vero;
+   - i giorni futuri non ancora fatti ripartono in rotazione Gambe → Spinta → Tirata;
+   - in s.restructureBackup resta tutto ciò che viene modificato (annullabile). */
+const SPLIT3_ID = "restructure-3-schede";
+const SPLIT3_OLD = [
+  ["Leg Press", "Panca inclinata manubri", "Lat Machine", "Affondi statici con manubri", "Alzate laterali manubri",
+   "Curl Bicipiti", "Crunch panca inclinata", "Tricipiti ai Cavi", "Circuito metabolico"],
+  ["Leg Extension", "Chest Press", "Lat pulldown inversa", "Affondi laterali con manubri", "Alzate laterali manubri",
+   "Lento avanti manubri", "Pulldown cavi corda", "Plank battito spalle", "Crunch sollevamento gambe", "Mountain climber"]
+];
+const SPLIT3_NEW = [
+  { id: "my_split_gambe",  name: "Gambe",  emoji: "🦵", color: "#FF2D95", focus: "Gambe + core",
+    ex: ["Leg Press", "Leg Extension", "Affondi statici con manubri", "Affondi laterali con manubri", "Crunch sollevamento gambe", "Mountain climber"] },
+  { id: "my_split_spinta", name: "Spinta", emoji: "💪", color: "#5B8DEF", focus: "Petto, spalle, tricipiti",
+    ex: ["Panca inclinata manubri", "Chest Press", "Lento avanti manubri", "Alzate laterali manubri", "Tricipiti ai Cavi", "Crunch panca inclinata"] },
+  { id: "my_split_tirata", name: "Tirata", emoji: "🔙", color: "#F59E0B", focus: "Dorsali, bicipiti",
+    ex: ["Lat Machine", "Lat pulldown inversa", "Pulldown cavi corda", "Curl Bicipiti", "Plank battito spalle", "Circuito metabolico"] }
+];
+const split3Norm = (n) => String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+function restructureThreeSplit(s) {
+  if (s.migrations.indexOf(SPLIT3_ID) >= 0) return false;
+  const exName = (k) => ((s.customExercises || {})[k] || (typeof EXERCISES !== "undefined" ? EXERCISES[k] : null) || {}).name;
+  const active = (s.myWorkouts || []).filter(w => !w.archived && !w.pt);
+  if (active.length !== 2) return false;
+
+  // le due schede devono corrispondere ESATTAMENTE (nomi degli esercizi, in qualsiasi ordine)
+  const sig = (names) => names.map(split3Norm).sort().join("|");
+  const olds = [];
+  for (const want of SPLIT3_OLD) {
+    const w = active.find(x => sig((x.exercises || []).map(exName)) === sig(want));
+    if (!w || olds.indexOf(w) >= 0) return false;
+    olds.push(w);
+  }
+
+  // nome → chiave (per le Alzate: due chiavi, una per scheda)
+  const keyOf = {};
+  olds.forEach(w => w.exercises.forEach(k => {
+    const n = split3Norm(exName(k));
+    (keyOf[n] = keyOf[n] || []).indexOf(k) < 0 && keyOf[n].push(k);
+  }));
+
+  // backup di tutto ciò che verrà modificato
+  s.restructureBackup = {
+    at: new Date().toISOString(),
+    myWorkouts: JSON.parse(JSON.stringify(s.myWorkouts || [])),
+    schedule: JSON.parse(JSON.stringify(s.schedule || {})),
+    merged: null
+  };
+
+  // unione delle Alzate laterali: sopravvive la chiave usata più di recente
+  const alz = keyOf[split3Norm("Alzate laterali manubri")] || [];
+  if (alz.length === 2) {
+    const exOf = (x) => x.exercises || x.weights || {};
+    const lastUse = (k) => (s.sessions || []).filter(x => exOf(x)[k]).map(x => x.date).sort().pop() || "";
+    const [keep, drop] = lastUse(alz[1]) > lastUse(alz[0]) ? [alz[1], alz[0]] : [alz[0], alz[1]];
+    const moved = [];
+    (s.sessions || []).forEach(x => {
+      const e = exOf(x);
+      if (e[drop] && !e[keep]) { e[keep] = e[drop]; delete e[drop]; moved.push(x.id); }
+    });
+    s.prep = s.prep || {};
+    if (s.prep[drop] && !s.prep[keep]) s.prep[keep] = s.prep[drop];
+    delete s.prep[drop];
+    s.exNotes = s.exNotes || {};
+    if (s.exNotes[drop]) {
+      s.exNotes[keep] = s.exNotes[keep] ? s.exNotes[keep] + "\n" + s.exNotes[drop] : s.exNotes[drop];
+      delete s.exNotes[drop];
+    }
+    s.restructureBackup.merged = { from: drop, to: keep, sessionIds: moved };
+    keyOf[split3Norm("Alzate laterali manubri")] = [keep];
+  }
+
+  // le 3 nuove schede, con le chiavi di sempre
+  const fresh = SPLIT3_NEW.map(n => {
+    const exercises = n.ex.map(name => keyOf[split3Norm(name)][0]);
+    return { id: n.id, name: n.name, emoji: n.emoji, color: n.color,
+             sub: `${exercises.length} esercizi`, focus: n.focus, exercises, custom: true };
+  });
+  olds.forEach(w => { w.archived = true; });
+  s.myWorkouts = (s.myWorkouts || []).filter(w => fresh.every(f => f.id !== w.id)).concat(fresh);
+
+  // calendario: il passato resta com'è, il futuro non fatto ruota sulle nuove schede
+  const oldIds = olds.map(w => w.id);
+  const rot = fresh.map(w => w.id);
+  const days = Object.keys(s.schedule || {}).filter(d => {
+    const e = s.schedule[d];
+    return e && !e.pt && (oldIds.indexOf(e.workoutId) >= 0 || rot.indexOf(e.workoutId) >= 0);
+  }).sort();
+  // (qui core.js non è ancora inizializzato: data locale calcolata a mano, mai toISOString)
+  const t = new Date();
+  const today = t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+  let cursor = -1;
+  days.forEach(d => {
+    const e = s.schedule[d];
+    const frozen = e.done || d < today || (s.sessions || []).some(x => x.date === d);
+    if (frozen) { const i = rot.indexOf(e.workoutId); if (i >= 0) cursor = i; return; }
+    cursor = (cursor + 1) % rot.length;
+    s.schedule[d] = Object.assign({}, e, { workoutId: rot[cursor] });
+  });
+
+  s.migrations.push(SPLIT3_ID);
+  return true;
 }
 
 function loadState() {

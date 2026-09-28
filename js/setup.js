@@ -403,7 +403,7 @@
 
   /* ---------- SCELTA MODALITÀ SCHEDA ---------- */
   function showBuilderChooser(fromOnboarding) {
-    const mine = state.myWorkouts || [];
+    const mine = activeMyWorkouts();
     overlay().classList.add("show");
     overlay().innerHTML = `
       <div class="ob-box">
@@ -463,12 +463,13 @@
   };
   window.applyPreset = function (k) {
     const p = PRESETS[k];
-    state.myWorkouts = p.days.map((exs, i) => ({
+    // le schede archiviate restano: danno il nome alle sessioni passate
+    state.myWorkouts = archivedWorkouts().concat(p.days.map((exs, i) => ({
       id: "my_" + Date.now() + "_" + i,
       name: p.days.length > 1 ? `${p.name.split(" / ").length > 1 ? (p.names[i] || p.name) : p.name}` : p.name,
       emoji: p.emoji, color: [p.color, "#A855F7", "#10B981"][i % 3],
       sub: `${exs.length} esercizi`, focus: p.focus, exercises: exs, custom: true
-    }));
+    })));
     saveState(state);
     toast("📋 Scheda creata!");
     closeSetup();

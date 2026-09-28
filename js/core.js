@@ -23,8 +23,12 @@ const fmtLong = (str) => {
   const d = new Date(str + "T00:00:00");
   return d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 };
-// Schede dell'utente se ne ha create, altrimenti quelle di default
-const ALL_WORKOUTS = () => (state.myWorkouts && state.myWorkouts.length) ? state.myWorkouts : WORKOUTS;
+// Schede dell'utente se ne ha create, altrimenti quelle di default.
+// Le schede ARCHIVIATE (archived:true) restano nei dati solo per dare il nome
+// giusto alle sessioni passate: fuori da Allena, rotazione e builder.
+const activeMyWorkouts = () => (state.myWorkouts || []).filter(w => !w.archived);
+const archivedWorkouts = () => (state.myWorkouts || []).filter(w => w.archived);
+const ALL_WORKOUTS = () => activeMyWorkouts().length ? activeMyWorkouts() : WORKOUTS;
 const getWorkout = (id) => ALL_WORKOUTS().find(w => w.id === id)
   || WORKOUTS.find(w => w.id === id)
   || (state.myWorkouts || []).find(w => w.id === id)

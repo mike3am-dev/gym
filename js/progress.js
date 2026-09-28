@@ -392,13 +392,15 @@ function ptCoachNote(lifts) {
 }
 
 function renderVolumeChart() {
-  // SOLO le schede attuali dell'utente (Seduta 1/2): le vecchie schede
-  // dismesse e il PT restano fuori. Asse X = settimane; per ogni settimana
+  // Schede attuali a colori + schede archiviate in grigio; le vecchie schede
+  // eliminate e il PT restano fuori. Asse X = settimane; per ogni settimana
   // un istogramma per scheda (colore della scheda) + tendenza per scheda.
   const ctx = $("vol-chart").getContext("2d");
   if (charts.vol) charts.vol.destroy();
   const vv = $("vol-verdict");
-  const myIds = ALL_WORKOUTS().map(w => w.id);
+  // + le schede archiviate (in grigio): le settimane passate restano visibili
+  const shown = ALL_WORKOUTS().concat(archivedWorkouts());
+  const myIds = shown.map(w => w.id);
   const s = [...state.sessions]
     .filter(x => myIds.includes(x.workoutId))
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -419,16 +421,18 @@ function renderVolumeChart() {
   // così a colpo d'occhio si capisce quale scheda è quale.
   const SCHED_COLORS = ["#FF2D95", "#FF86C2", "#C724A8", "#FFB3A1"];   // rosa acceso, rosa chiaro, magenta scuro, rosa salmone
   const datasets = [];
-  ALL_WORKOUTS().forEach((w, wi) => {
+  const ARCH_GREYS = ["#8A8496", "#5E5869", "#B3AEBD"];
+  let ai = 0;
+  shown.forEach((w, wi) => {
     const vals = weeks.map(wk => byWeek[wk][w.id] != null ? Math.round(byWeek[wk][w.id]) : null);
     if (!vals.some(v => v != null)) return;
-    const color = SCHED_COLORS[wi % SCHED_COLORS.length];
-    datasets.push({ type: "bar", label: w.name, data: vals,
+    const color = w.archived ? ARCH_GREYS[ai++ % ARCH_GREYS.length] : SCHED_COLORS[wi % SCHED_COLORS.length];
+    datasets.push({ type: "bar", label: w.archived ? w.name + " (vecchia)" : w.name, data: vals,
       backgroundColor: weeks.map((wk, i) => dlWeek[wk] ? "#7DD3FC66" : color + "CC"), borderRadius: 6, order: 2 });
     // tendenza della scheda sulle SUE settimane — quelle di scarico ESCLUSE.
     // Tratteggio diverso per scheda: piena la 1ª, tratteggiata la 2ª…
     const idxs = weeks.map((wk, i) => (vals[i] != null && !dlWeek[wk]) ? i : -1).filter(i => i >= 0);
-    if (idxs.length >= 2) {
+    if (idxs.length >= 2 && !w.archived) {
       const tr = linReg(idxs.map(i => vals[i]));
       const line = weeks.map(() => null);
       idxs.forEach((wi2, j) => line[wi2] = tr[j]);

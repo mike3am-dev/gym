@@ -54,6 +54,7 @@ var api = new Function(
     posturalSuggested: posturalSuggested, startPosturalRoutine: startPosturalRoutine,
     pplayStep: pplayStep, pplayTimer: pplayTimer, closePosturalRoutine: closePosturalRoutine,
     posturalOf: posturalOf, switchView: switchView,
+    restructureThreeSplit: restructureThreeSplit, getWorkout: getWorkout, ALL_WORKOUTS: ALL_WORKOUTS, applyMigrations: applyMigrations,
     resequenceSchedule: resequenceSchedule, rotationWorkouts: rotationWorkouts, assignDayKind: assignDayKind,
     startGuided: startGuided, guidedCompleteSet: guidedCompleteSet, guidedQuality: guidedQuality,
     finishGuided: finishGuided, wrappedSlides: buildWrappedSlides,
@@ -682,6 +683,123 @@ function smoke(name, fn) {
   var before = ids().join(",");
   api.resequenceSchedule(); api.resequenceSchedule();
   ok("rotazione: resequenceSchedule è idempotente", ids().join(",") === before);
+})();
+
+/* ---- RISTRUTTURAZIONE 2 → 3 SCHEDE (clone della struttura di Mike) ---- */
+(function () {
+  var OLD = [
+    ["Leg Press", "Panca inclinata manubri", "Lat Machine", "Affondi statici con manubri", "Alzate laterali manubri",
+     "Curl Bicipiti", "Crunch panca inclinata", "Tricipiti ai Cavi", "Circuito metabolico"],
+    ["Leg Extension", "Chest Press", "Lat pulldown inversa", "Affondi laterali con manubri", "Alzate laterali manubri",
+     "Lento avanti manubri", "Pulldown cavi corda", "Plank battito spalle", "Crunch sollevamento gambe", "Mountain climber"]
+  ];
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function dayOff(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function build(names) {
+    var s = api.defaultState(); s.customExercises = {}; s.myWorkouts = []; s.sessions = []; s.schedule = {}; s.prep = {}; s.exNotes = {};
+    names.forEach(function (list, gi) {
+      var keys = list.map(function (n, ei) {
+        var k = "cx_" + n.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 24) + "_" + gi + ei;   // come l'import PT
+        s.customExercises[k] = { name: n, type: "dumbbell", sets: 3, reps: 10 };
+        return k;
+      });
+      s.myWorkouts.push({ id: "my_old_" + gi, name: gi ? "Leg Extension" : "Leg Press", exercises: keys, custom: true });
+    });
+    // storico: 3 sessioni per scheda, nel passato
+    var id = 1;
+    [-20, -13, -6].forEach(function (off, i) {
+      s.myWorkouts.forEach(function (w, wi) {
+        var ex = {};
+        w.exercises.forEach(function (k, j) { ex[k] = { sets: [{ w: 4 + i + wi * 2 + j, r: 10 }, { w: 4 + i + j, r: 10 }], quality: "clean" }; });
+        var date = dayOff(off + wi * 2);
+        s.sessions.push({ id: id++, date: date, workoutId: w.id, exercises: ex });
+        s.schedule[date] = { workoutId: w.id, done: true };
+      });
+    });
+    s.schedule[dayOff(2)] = { workoutId: "my_old_0", done: false };
+    s.schedule[dayOff(3)] = { workoutId: "pt", pt: true, done: false };
+    s.schedule[dayOff(4)] = { workoutId: "my_old_1", done: false };
+    s.schedule[dayOff(6)] = { workoutId: "my_old_0", done: false };
+    s.schedule[dayOff(8)] = { workoutId: "my_old_1", done: false, note: "ok" };
+    return s;
+  }
+  function totKg(s) { var t = 0; s.sessions.forEach(function (x) { Object.keys(x.exercises).forEach(function (k) { x.exercises[k].sets.forEach(function (z) { t += z.w * z.r; }); }); }); return t; }
+  function nSets(s) { var t = 0; s.sessions.forEach(function (x) { Object.keys(x.exercises).forEach(function (k) { t += x.exercises[k].sets.length; }); }); return t; }
+
+  // A) chi NON ha esattamente le schede di Mike non viene toccato
+  var other = build([OLD[0], OLD[1].slice(0, 9).concat(["Burpees"])]);
+  var otherBefore = JSON.stringify(other);
+  ok("3 schede: altri utenti (1 esercizio diverso) NON vengono toccati",
+     api.restructureThreeSplit(other) === false && JSON.stringify(other) === otherBefore);
+  var demo = api.demoState(); var demoBefore = JSON.stringify(demo);
+  ok("3 schede: la demo non viene toccata", api.restructureThreeSplit(demo) === false && JSON.stringify(demo) === demoBefore);
+
+  // B) le schede di Mike (in ordine qualsiasi dentro la scheda)
+  var s = build([OLD[0].slice().reverse(), OLD[1]]);
+  var kg0 = totKg(s), sets0 = nSets(s), n0 = s.sessions.length;
+  var alzKeys = s.myWorkouts.map(function (w) { return w.exercises.filter(function (k) { return /alzate/.test(k); })[0]; });
+  s.prep[alzKeys[0]] = { sets: 3, reps: 12, w: 4 };
+  ok("3 schede: la migrazione parte sulle schede di Mike", api.restructureThreeSplit(s) === true);
+
+  var active = s.myWorkouts.filter(function (w) { return !w.archived; });
+  ok("3 schede: Gambe / Spinta / Tirata in quest'ordine", active.map(function (w) { return w.name; }).join(",") === "Gambe,Spinta,Tirata");
+  ok("3 schede: 6 + 6 + 6 esercizi", active.map(function (w) { return w.exercises.length; }).join(",") === "6,6,6");
+  ok("3 schede: le vecchie restano, archiviate", s.myWorkouts.filter(function (w) { return w.archived; }).length === 2);
+  var allNew = [].concat.apply([], active.map(function (w) { return w.exercises; }));
+  ok("3 schede: nessun esercizio duplicato", allNew.length === 18 && allNew.every(function (k, i) { return allNew.indexOf(k) === i; }));
+  ok("3 schede: riusano le chiavi di sempre", allNew.every(function (k) { return !!s.customExercises[k]; }));
+
+  ok("3 schede: nessuna sessione persa", s.sessions.length === n0);
+  ok("3 schede: kg totali identici", totKg(s) === kg0);
+  ok("3 schede: serie totali identiche", nSets(s) === sets0);
+  ok("3 schede: le sessioni passate tengono la scheda vera", s.sessions.every(function (x) { return /^my_old_/.test(x.workoutId); }));
+
+  var m = s.restructureBackup.merged;
+  var alzInNew = active[1].exercises.filter(function (k) { return /alzate/.test(k); });
+  ok("alzate: un solo storico (chiave eliminata assente dalle sessioni)",
+     !!m && s.sessions.every(function (x) { return !x.exercises[m.from]; }) && alzInNew.length === 1 && alzInNew[0] === m.to);
+  ok("alzate: le sessioni di entrambe le schede ora sono sulla stessa chiave",
+     s.sessions.filter(function (x) { return x.exercises[m.to]; }).length === 6);
+  ok("alzate: vince la chiave usata più di recente (seduta Leg Extension)", m.to === alzKeys[1]);
+  ok("alzate: la preparazione non si perde", !!s.prep[m.to] && !s.prep[m.from]);
+
+  ok("calendario: i giorni fatti restano sulla scheda vecchia",
+     s.sessions.every(function (x) { return s.schedule[x.date].workoutId === x.workoutId; }));
+  ok("calendario: il futuro ruota Gambe → Spinta → Tirata → Gambe",
+     [2, 4, 6, 8].map(function (o) { return s.schedule[dayOff(o)].workoutId; }).join(",") === "my_split_gambe,my_split_spinta,my_split_tirata,my_split_gambe");
+  ok("calendario: il giorno PT resta PT", s.schedule[dayOff(3)].pt === true && s.schedule[dayOff(3)].workoutId === "pt");
+  ok("calendario: le note restano", s.schedule[dayOff(8)].note === "ok");
+  ok("backup: calendario e schede originali salvati", s.restructureBackup.myWorkouts.length === 2 && !!s.restructureBackup.schedule[dayOff(2)]);
+
+  // B2) caso reale di Mike: le Alzate usano la STESSA chiave in entrambe le schede
+  var r = build([OLD[0], OLD[1]]);
+  var k0 = r.myWorkouts[0].exercises[4], k1 = r.myWorkouts[1].exercises[4];
+  r.myWorkouts[1].exercises[4] = k0; delete r.customExercises[k1];
+  r.sessions.forEach(function (x) { if (x.exercises[k1]) { x.exercises[k0] = x.exercises[k1]; delete x.exercises[k1]; } });
+  var rSess = JSON.stringify(r.sessions);
+  ok("alzate (chiave già condivisa): migrazione ok, nessuna unione necessaria",
+     api.restructureThreeSplit(r) === true && r.restructureBackup.merged === null);
+  ok("alzate (chiave già condivisa): sessioni byte-identiche", JSON.stringify(r.sessions) === rSess);
+  ok("alzate (chiave già condivisa): compare una volta sola, in Spinta",
+     r.myWorkouts.filter(function (w) { return !w.archived; }).map(function (w) { return w.exercises.filter(function (k) { return k === k0; }).length; }).join(",") === "0,1,0");
+
+  // C) idempotente: rigirarla (anche via applyMigrations) non cambia nulla
+  var snap1 = JSON.stringify(s.myWorkouts) + JSON.stringify(s.schedule) + JSON.stringify(s.sessions);
+  ok("3 schede: rigirarla da sola non cambia nulla",
+     api.restructureThreeSplit(s) === false && JSON.stringify(s.myWorkouts) + JSON.stringify(s.schedule) + JSON.stringify(s.sessions) === snap1);
+  api.applyMigrations(s);                       // le migrazioni storiche fanno il loro primo giro
+  var snap = JSON.stringify(s);
+  api.applyMigrations(s); api.applyMigrations(s);
+  ok("3 schede: idempotente", JSON.stringify(s) === snap);
+
+  // D) app: le archiviate spariscono da Allena ma danno ancora il nome al passato
+  api.set(s);
+  ok("app: Allena mostra solo le 3 nuove", api.ALL_WORKOUTS().map(function (w) { return w.id; }).join(",") === "my_split_gambe,my_split_spinta,my_split_tirata");
+  ok("app: la rotazione del calendario usa solo le 3 nuove", api.rotationWorkouts().length === 3);
+  ok("app: una sessione passata mostra ancora 'Leg Press'", api.getWorkout("my_old_0").name === "Leg Press");
+  var rendered = true;
+  try { api.renderWorkout(); api.renderProgress(); api.renderCalendar(); } catch (e) { rendered = String(e); }
+  ok("app: Allena, Progressi (grafico con le vecchie in grigio) e Calendario si disegnano dopo la migrazione", rendered === true);
 })();
 
 api.enterDemoMode();                     // stato realistico completo (Alex)
